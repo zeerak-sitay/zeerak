@@ -312,6 +312,29 @@
             color: var(--text-muted);
             font-size: 0.8rem;
             opacity: 0.7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Visit counter */
+        .visit-counter {
+            margin-top: 5px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(56, 189, 248, 0.1);
+        }
+        
+        .visit-counter svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--primary);
         }
         
         /* Scrollbar style */
@@ -329,6 +352,12 @@
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         @media (max-width: 900px) {
@@ -373,7 +402,7 @@
                 <span>ماڵان</span>
             </button>
             <button class="type-btn" data-type="trade" onclick="setType('trade', this)">
-                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
                 <span>بازرگانی</span>
             </button>
             <button class="type-btn" data-type="industrial" onclick="setType('industrial', this)">
@@ -439,10 +468,47 @@
     </div>
 </div>
 
-<div class="developer-credit">Developed by Zeerak Maaruf</div>
+<div class="developer-credit">
+    <span>Developed by Zeerak Maaruf</span>
+    <div class="visit-counter" id="visitCounter">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
+        دەستگەیشتن: <span id="visitCount">0</span>
+    </div>
+</div>
 
 <script>
     let currentType = 'homes';
+
+    // Visit counter functionality
+    function updateVisitCounter() {
+        let visitCount = localStorage.getItem('electricityCalculatorVisits');
+        
+        if (!visitCount) {
+            visitCount = 1;
+        } else {
+            visitCount = parseInt(visitCount) + 1;
+        }
+        
+        localStorage.setItem('electricityCalculatorVisits', visitCount);
+        
+        // Display the count with animation
+        const visitElement = document.getElementById('visitCount');
+        const counterElement = document.getElementById('visitCounter');
+        
+        // Animate the number
+        animateValue(visitElement, visitCount, 800);
+        
+        // Add pulse animation to the counter
+        counterElement.style.animation = 'pulse 0.5s ease';
+        setTimeout(() => {
+            counterElement.style.animation = '';
+        }, 500);
+    }
+    
+    // Call the function when page loads
+    window.addEventListener('load', updateVisitCounter);
 
     function setType(type, element) {
         currentType = type;
@@ -501,7 +567,7 @@
         }
 
         // Animation for numbers
-        animateValue(document.getElementById('resultValue'), fee);
+        animateValue(document.getElementById('resultValue'), fee, 500);
         
         document.getElementById('kwPerMonth').textContent = kwPerMonth.toFixed(2) + " KW";
         document.getElementById('basePrice').textContent = basePriceText;
@@ -555,9 +621,8 @@
         return total;
     }
 
-    function animateValue(obj, end) {
+    function animateValue(obj, end, duration = 500) {
         let startTimestamp = null;
-        const duration = 500;
         const start = parseFloat(obj.innerHTML.replace(/,/g, '')) || 0;
 
         const step = (timestamp) => {
